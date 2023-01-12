@@ -497,7 +497,7 @@ void GameScene::CheckAllCollisions() {
 
 		if (posA.x > min.x && posA.x < max.x) {
 			if (posA.y > min.y && posA.y < max.y) {
-				if (sqrt(posA.z * posA.z) - sqrt(posB.z * posB.z)) {
+				if (sqrt(posA.z * posA.z) - sqrt(posB.z * posB.z) <= 5) { //z距離
 					enemy_->OnCollision(true);
 				}
 			}
