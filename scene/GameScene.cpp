@@ -105,7 +105,7 @@ void GameScene::Update() {
 	switch (sceneNo_) {
 	case SceneNo::Title: //タイトル
 		if (input_->TriggerKey(DIK_SPACE) && sceneNo_ == SceneNo::Title) {
-			sceneNo_ = SceneNo::Operate;
+			sceneNo_ = SceneNo::Game;
 
 		}
 		break;
@@ -461,7 +461,7 @@ void GameScene::UpdateEnemyPopCommands()
 			break;
 		}
 		else if (word.find("OVER") == 0) {
-			sceneNo_ = SceneNo::Over;
+			//sceneNo_ = SceneNo::Over;
 			break;
 
 		}
@@ -481,16 +481,27 @@ void GameScene::CheckAllCollisions() {
 	//判定対象AとBの座標
 	Vector3 posA, posB;
 
+	Vector2 min, max;
+	min = player_->GetMinAtkColide();
+	max = player_->GetMaxAtkColide();
 
+	WorldTransform pBulWorldT = player_->GetWorldTransformBullet();
 
 #pragma region 自弾と敵キャラの当たり判定
 	//敵キャラの座標
 	for (std::unique_ptr<Enemy>& enemy_ : enemys_) {
 		posA = enemy_->GetWorldPosition();
 
-
 		//自弾の座標
-		posB = {0,0,-20};
+		posB = pBulWorldT.translation_;
+
+		if (posA.x > min.x && posA.x < max.x) {
+			if (posA.y > min.y && posA.y < max.y) {
+				if (sqrt(posA.z * posA.z) - sqrt(posB.z * posB.z)) {
+					enemy_->OnCollision(true);
+				}
+			}
+		}
 
 		float x = posB.x - posA.x;
 		float y = posB.y - posA.y;
@@ -509,14 +520,14 @@ void GameScene::CheckAllCollisions() {
 		}
 
 
-		if (cd <= deathblowRadius) {
-			//敵キャラの衝突時コールバックを呼び出す
-			enemy_->OnCollision(true);
-			//GenerEffect(enemy_->GetWorldPosition(), enemy_->GetFieldLane());
-			hit_++;
-			//衝突時コールバックを呼び出す
-			//goal_->OnCollision();
-		}
+		//if (cd <= deathblowRadius) {
+		//	//敵キャラの衝突時コールバックを呼び出す
+		//	enemy_->OnCollision(true);
+		//	//GenerEffect(enemy_->GetWorldPosition(), enemy_->GetFieldLane());
+		//	hit_++;
+		//	//衝突時コールバックを呼び出す
+		//	//goal_->OnCollision();
+		//}
 
 		if (posA.z < -50/*画面外*/) {
 			enemy_->OnCollision(false);

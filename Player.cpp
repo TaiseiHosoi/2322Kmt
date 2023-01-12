@@ -36,8 +36,13 @@ void Player::Initialize(Model* model, uint32_t textureHandle)
 		worldTransformUpdate(&line_[i].worldTransform);
 
 	}
+	//nextLine_ = 0;
 
-	nextLine_ = 0;
+	//攻撃
+	bulletWorldTransform_.Initialize();
+	isAtk = false;
+	isAtkColide = false;
+
 	worldTransformUpdate(&worldTransform_);
 
 }
@@ -132,6 +137,7 @@ void Player::Update()
 
 
 #pragma region 攻撃
+	Vector2 squareHalf;
 	if (isAtk == true) {
 		isAtk = false;
 		minVec2 = { nowEndPos.x, nowEndPos.y};
@@ -140,20 +146,43 @@ void Player::Update()
 			if (line_[i].isDraw == true) {
 				line_[i].isDraw = false;
 
-				if (line_[i].sLineVec2.x > maxVec2.x) {
-					if (line_[i].sLineVec2.y > maxVec2.y) {
-						maxVec2 = line_[i].sLineVec2;
+				if (line_[i].eLineVec2.x > maxVec2.x) {
+					if (line_[i].eLineVec2.y > maxVec2.y) {
+						maxVec2 = line_[i].eLineVec2;
 					}
 				}
-				else if (line_[i].sLineVec2.x < minVec2.x) {
-					if (line_[i].sLineVec2.y < minVec2.y) {
-						minVec2 = line_[i].sLineVec2;
+				else if (line_[i].eLineVec2.x < minVec2.x) {
+					if (line_[i].eLineVec2.y < minVec2.y) {
+						minVec2 = line_[i].eLineVec2;
 					}
 				}
 			}
 			
 		}
+
+		squareHalf = { minVec2.x + (maxVec2.x - minVec2.x) / 2	//四角形の中心の位置
+		,minVec2.y - (maxVec2.y - minVec2.y) / 2 };
+
+		bulletWorldTransform_.translation_ = { squareHalf.x,squareHalf.y,0 };
+		bulletWorldTransform_.scale_ = { (maxVec2.x - minVec2.x)/2 ,(maxVec2.y - minVec2.y)/2,1 };
+		isAtkColide = true;
+
+
 	}
+
+	
+	if (isAtkColide == true) {
+		float kBulletSpeed = 3.0f;
+		bulletWorldTransform_.translation_.z += kBulletSpeed;
+		
+
+		if (bulletWorldTransform_.translation_.z > 200) {
+			isAtkColide = false;
+			isAtk = false;
+		}
+	}
+
+	
 #pragma endregion 攻撃
 
 #pragma region ワールドトランスフォーム更新
@@ -162,6 +191,8 @@ void Player::Update()
 	}
 	worldTransformUpdate(&worldTransform_);
 	worldTransformUpdate(&nowLineWorldTransform_);
+	worldTransformUpdate(&bulletWorldTransform_);
+
 #pragma endregion ワールドトランスフォーム更新
 
 
@@ -169,7 +200,9 @@ void Player::Update()
 
 void Player::Draw(ViewProjection viewProjection)
 {
-
+	if (isAtkColide == true) {
+		model_->Draw(bulletWorldTransform_, viewProjection, textureHandle_);
+	}
 	model_->Draw(worldTransform_, viewProjection, textureHandle_);
 	model_->Draw(nowLineWorldTransform_, viewProjection, textureHandle_);
 	for (int i = 0; i < _countof(line_); i++) {
@@ -192,11 +225,36 @@ void Player::Draw(ViewProjection viewProjection)
 	}
 
 
+
 }
 
 Vector3 Player::GetWorldPosition()
 {
 	return Vector3();
+}
+
+WorldTransform Player::GetWorldTransformBullet()
+{
+	return bulletWorldTransform_;
+}
+
+
+
+
+
+Vector2 Player::GetMinAtkColide()
+{
+	return minVec2;
+}
+
+Vector2 Player::GetMaxAtkColide()
+{
+	return maxVec2;
+}
+
+bool Player::GetIsAtkColide()
+{
+	return isAtkColide;
 }
 
 void Player::OnCollision(bool isBreak)

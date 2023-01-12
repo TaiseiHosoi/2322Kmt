@@ -30,9 +30,12 @@ public:
 
 	bool IsDead() const { return isDead_; }	//死亡時
 
-	////ワールド座標を取得
+	//ゲッターセッター
 	Vector3 GetWorldPosition();
-	void SetAtkColide(Vector2 minVec2);
+	WorldTransform GetWorldTransformBullet();
+	Vector2 GetMinAtkColide();
+	Vector2 GetMaxAtkColide();
+	bool GetIsAtkColide();
 
 	//衝突を検出したら呼び出されるコールバック関数
 	void OnCollision(bool isBreak);
@@ -74,9 +77,12 @@ private:
 	int nowFlameCount_;
 
 	//攻撃
-	bool isAtk = false;
+	bool isAtk = false;	//攻撃開始時の初期化等で使う
+	bool isAtkColide = false; //攻撃の当たり判定があるかどうか
+
+	WorldTransform bulletWorldTransform_;
 	Vector2 minVec2;
 	Vector2 maxVec2;
-	
+
 
 };
